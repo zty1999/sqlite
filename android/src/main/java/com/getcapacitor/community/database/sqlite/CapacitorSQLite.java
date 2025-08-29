@@ -355,7 +355,8 @@ public class CapacitorSQLite {
                 isEncryption,
                 vUpgObject,
                 sharedPreferences,
-                readonly
+                readonly,
+                    false
             );
             dbDict.put(connName, db);
         } catch (Exception e) {
@@ -393,7 +394,8 @@ public class CapacitorSQLite {
                 isEncryption,
                 new Hashtable<>(),
                 sharedPreferences,
-                true
+                true,
+                    true
             );
             dbDict.put(connName, db);
         } catch (Exception e) {
@@ -1233,7 +1235,8 @@ public class CapacitorSQLite {
                 isEncryption,
                 new Hashtable<>(),
                 sharedPreferences,
-                false
+                false,
+                    false
             );
             if (overwrite && mode.equals("full")) {
                 Boolean isExists = this.uFile.isFileExists(context, dbName);

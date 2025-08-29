@@ -77,7 +77,8 @@ public class Database {
         Boolean isEncryption,
         Dictionary<Integer, JSONObject> vUpgObject,
         SharedPreferences sharedPreferences,
-        Boolean readonly
+        Boolean readonly,
+        Boolean ncDB
     ) {
         this._context = context;
         this._dbName = dbName;
@@ -87,8 +88,8 @@ public class Database {
         this._version = version;
         this._vUpgObject = vUpgObject;
         this._readOnly = readonly;
+        this.ncDB = ncDB;
         if (dbName.contains("/") && dbName.endsWith("SQLite.db")) {
-            this.ncDB = true;
             this._file = new File(dbName);
         } else {
             this._file = this._context.getDatabasePath(dbName);
