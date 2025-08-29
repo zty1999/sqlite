@@ -47,6 +47,10 @@ import org.json.JSONObject;
 public class CapacitorSQLite {
 
     private static final String TAG = CapacitorSQLite.class.getName();
+
+    // sqlite 数据库文件名统一 "SQLite.db" 结尾
+    private static final String sqliteDbSuffix = "SQLite.db";
+
     private final Context context;
     private final Dictionary<String, Database> dbDict = new Hashtable<>();
     private final UtilsSQLite uSqlite = new UtilsSQLite();
@@ -341,9 +345,10 @@ public class CapacitorSQLite {
             throw new Exception("Database cannot be encrypted as 'No Encryption' set in capacitor.config");
         }
         try {
+
             Database db = new Database(
                 context,
-                dbName + "SQLite.db",
+                normalizeDbNameInternal(dbName), // xxxSQLite.db or  /xxx/xxx/xxxSQLite.db
                 encrypted,
                 mode,
                 version,
@@ -731,7 +736,7 @@ public class CapacitorSQLite {
      */
     public Boolean isDatabase(String dbName) {
         dbName = getDatabaseName(dbName);
-        return uFile.isFileExists(context, dbName + "SQLite.db");
+        return uFile.isFileExists(context,  normalizeDbNameInternal(dbName));
     }
 
     /**
@@ -743,8 +748,8 @@ public class CapacitorSQLite {
      */
     public Boolean isDatabaseEncrypted(String dbName) throws Exception {
         dbName = getDatabaseName(dbName);
-        File file = context.getDatabasePath(dbName + "SQLite.db");
-        if (uFile.isFileExists(context, dbName + "SQLite.db")) {
+        File file = context.getDatabasePath(normalizeDbNameInternal(dbName));
+        if (uFile.isFileExists(context, normalizeDbNameInternal(dbName))) {
             UtilsSQLCipher.State state = uCipher.getDatabaseState(context, file, sharedPreferences, globVar);
             if (state == ENCRYPTED_GLOBAL_SECRET || state == ENCRYPTED_SECRET) {
                 return true;
@@ -1051,7 +1056,7 @@ public class CapacitorSQLite {
         String connName = readonly ? "RO_" + dbName : "RW_" + dbName;
         Database db = dbDict.get(connName);
         if (db != null) {
-            File databaseFile = context.getDatabasePath(dbName + "SQLite.db");
+            File databaseFile = context.getDatabasePath(normalizeDbNameInternal(dbName));
             return databaseFile.exists();
         } else {
             String msg = "No available connection for database " + dbName;
@@ -1080,7 +1085,7 @@ public class CapacitorSQLite {
                 throw new Exception("not allowed in read-only mode");
             }
             try {
-                db.deleteDB(dbName + "SQLite.db");
+                db.deleteDB(normalizeDbNameInternal(dbName));
             } catch (Exception e) {
                 throw new Exception(e.getMessage());
             }
@@ -1209,7 +1214,7 @@ public class CapacitorSQLite {
                 throw new Exception(msg);
             }
             String dbName = getDatabaseName(jsonSQL.getDatabase());
-            dbName = dbName + "SQLite.db";
+            dbName = normalizeDbNameInternal(dbName);
             Integer dbVersion = jsonSQL.getVersion();
             String mode = jsonSQL.getMode();
             Boolean overwrite = jsonSQL.getOverwrite();
@@ -1360,6 +1365,23 @@ public class CapacitorSQLite {
         } catch (Exception e) {
             String msg = "close all connections " + e.getMessage();
             throw new Exception(msg);
+        }
+    }
+
+
+
+    // 返回字符以 SQLite.db 结尾
+    private String normalizeDbNameInternal(String dbName )  {
+        if (dbName.endsWith(sqliteDbSuffix)) {
+            // 当 dbName 以 "SQLite.db" 结尾时，不做修改
+            return dbName; // 返回原始大小写的 dbName
+        } else if (dbName.endsWith(".db")) {
+            // 当 dbName 不以 "SQLite.db" 结尾，但以 ".db" 结尾时 ".db" 替换为 "SQLite.db"
+            String baseName = dbName.replace(".db", "SQLite.db");
+            return baseName + sqliteDbSuffix;
+        } else {
+            // 非.db 结尾 直接添加 SQLite.db
+            return dbName + sqliteDbSuffix;
         }
     }
 }
